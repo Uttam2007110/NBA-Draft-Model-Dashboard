@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: nba-draft-board
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn dashboard:server
-    plan: free
