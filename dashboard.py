@@ -34,8 +34,8 @@ for y in YEARS + [max(YEARS)+1]:
     
 df = pd.concat(df)
 df = df.sort_values(by='mean DPM', ascending=False)
-df = df.rename(columns={'mean DPM':'meanDPM','all star':'allstar','all nba':'allnba','P5 DPM':'p5','median DPM':'median','P95 DPM':'p95'})
-df = df[['player','team','age','season','meanDPM','rotation','starter','allstar','allnba','mvp','p5','median','p95']]
+df = df.rename(columns={'makes NBA':'makesNBA','mean DPM':'meanDPM','all star':'allstar','all nba':'allnba','P5 DPM':'p5','median DPM':'median','P95 DPM':'p95'})
+df = df[['player','team','age','season','meanDPM','makesNBA','rotation','starter','allstar','allnba','mvp','p95']]
 df['age'] = round(df['age'],2)
 #df = df.head(250)
 df = df.dropna()
@@ -59,9 +59,9 @@ df_prgain = extract_validation_data('gain', ['year', 'rotation', 'starter', 'all
 
 #%% Constants
 
-TIER_COLS   = ["rotation","starter","allstar","allnba","mvp"]
-TIER_LABELS = {"rotation":"Rotation","starter":"Starter","allstar":"All-star","allnba":"All-NBA","mvp":"MVP"}
-TIER_COLORS = {"rotation":"#378ADD","starter":"#1D9E75","allstar":"#D85A30","allnba":"#D4537E","mvp":"#7F77DD"}
+TIER_COLS   = ["makesNBA","rotation","starter","allstar","allnba","mvp"]
+TIER_LABELS = {"makesNBA":"NBA","rotation":"Rotation","starter":"Starter","allstar":"All-star","allnba":"All-NBA","mvp":"MVP"}
+TIER_COLORS = {"makesNBA":"#912323","rotation":"#378ADD","starter":"#1D9E75","allstar":"#D85A30","allnba":"#D4537E","mvp":"#7F77DD"}
 
 GRID  = "#f0f0f0"
 FONT  = "system-ui, -apple-system, sans-serif"
@@ -279,13 +279,14 @@ app.layout = html.Div(
                                 {"name":"Age",        "id":"age",     "type":"numeric"},
                                 {"name":"year",       "id":"season",  "type":"numeric"},
                                 {"name":"Mean DPM",   "id":"meanDPM", "type":"numeric"},
+                                {"name":"Makes NBA",  "id":"makesNBA","type":"numeric"},
                                 {"name":"Rotation",   "id":"rotation","type":"numeric"},
                                 {"name":"Starter",    "id":"starter", "type":"numeric"},
                                 {"name":"All-star",   "id":"allstar", "type":"numeric"},
                                 {"name":"All-NBA",    "id":"allnba",  "type":"numeric"},
                                 {"name":"MVP",        "id":"mvp",     "type":"numeric"},
-                                {"name":"P5 DPM",     "id":"p5",      "type":"numeric"},
-                                {"name":"Median DPM", "id":"median",  "type":"numeric"},
+                                #{"name":"P5 DPM",     "id":"p5",      "type":"numeric"},
+                                #{"name":"Median DPM", "id":"median",  "type":"numeric"},
                                 {"name":"P95 DPM",    "id":"p95",     "type":"numeric"},
                             ],
                             data=[],
@@ -310,23 +311,24 @@ app.layout = html.Div(
                                 {"if":{"column_id":"age"},     "width":"40px","color":"#666"},
                                 {"if":{"column_id":"season"},    "width":"40px","textAlign":"center","color":"#999"},
                                 {"if":{"column_id":"meanDPM"}, "width":"100px","textAlign":"center","fontWeight":"500"},
-                                {"if":{"column_id":"p5"},      "width":"70px","textAlign":"right","color":"#555"},
-                                {"if":{"column_id":"median"},  "width":"84px","textAlign":"right","color":"#999"},
+                                #{"if":{"column_id":"p5"},      "width":"70px","textAlign":"right","color":"#555"},
+                                #{"if":{"column_id":"median"},  "width":"84px","textAlign":"right","color":"#999"},
                                 {"if":{"column_id":"p95"},     "width":"70px","textAlign":"right","color":"#555"},
-                                {"if":{"column_id":"rotation"},"width":"70px","textAlign":"right","color":TIER_COLORS["rotation"]},
-                                {"if":{"column_id":"starter"}, "width":"64px","textAlign":"right","color":TIER_COLORS["starter"]},
-                                {"if":{"column_id":"allstar"}, "width":"64px","textAlign":"right","color":TIER_COLORS["allstar"]},
-                                {"if":{"column_id":"allnba"},  "width":"62px","textAlign":"right","color":TIER_COLORS["allnba"]},
-                                {"if":{"column_id":"mvp"},     "width":"56px","textAlign":"right","color":TIER_COLORS["mvp"]},
+                                {"if":{"column_id":"makesNBA"},"width":"70px","textAlign":"right","color":TIER_COLORS["makesNBA"],"fontWeight":"600"},
+                                {"if":{"column_id":"rotation"},"width":"70px","textAlign":"right","color":TIER_COLORS["rotation"],"fontWeight":"600"},
+                                {"if":{"column_id":"starter"}, "width":"64px","textAlign":"right","color":TIER_COLORS["starter"],"fontWeight":"600"},
+                                {"if":{"column_id":"allstar"}, "width":"64px","textAlign":"right","color":TIER_COLORS["allstar"],"fontWeight":"600"},
+                                {"if":{"column_id":"allnba"},  "width":"62px","textAlign":"right","color":TIER_COLORS["allnba"],"fontWeight":"600"},
+                                {"if":{"column_id":"mvp"},     "width":"56px","textAlign":"right","color":TIER_COLORS["mvp"],"fontWeight":"600"},
                             ],
                             style_data_conditional=[
                                 #{"if":{"filter_query":"{meanDPM_raw} >= 0","column_id":"meanDPM"},"color":"#1D9E75"},
                                 #{"if":{"filter_query":"{meanDPM_raw} < 0", "column_id":"meanDPM"},"color":"#E24B4A"},
                                 {"if": {"filter_query": "{meanDPM_raw} < -5", "column_id": "meanDPM"}, "color": "#E24B4A","fontWeight":"750"},
-                                {"if": {"filter_query": "{meanDPM_raw} >= -5 && {meanDPM_raw} < -1", "column_id": "meanDPM"}, "color": "#B16F60","fontWeight":"750"},
-                                {"if": {"filter_query": "{meanDPM_raw} >= -1 && {meanDPM_raw} < 0", "column_id": "meanDPM"}, "color": "#7F8E6B","fontWeight":"750"},
-                                {"if": {"filter_query": "{meanDPM_raw} >= 0 && {meanDPM_raw} < 1", "column_id": "meanDPM"}, "color": "#4EA271","fontWeight":"750"},
-                                {"if": {"filter_query": "{meanDPM_raw} >= 1", "column_id": "meanDPM"}, "color": "#1D9E75","fontWeight":"750"},
+                                {"if": {"filter_query": "{meanDPM_raw} >= -5 && {meanDPM_raw} < -2", "column_id": "meanDPM"}, "color": "#B16F60","fontWeight":"750"},
+                                {"if": {"filter_query": "{meanDPM_raw} >= -2 && {meanDPM_raw} < -1", "column_id": "meanDPM"}, "color": "#7F8E6B","fontWeight":"750"},
+                                {"if": {"filter_query": "{meanDPM_raw} >= -1 && {meanDPM_raw} < 0", "column_id": "meanDPM"}, "color": "#4EA271","fontWeight":"750"},
+                                {"if": {"filter_query": "{meanDPM_raw} >= 0", "column_id": "meanDPM"}, "color": "#1D9E75","fontWeight":"750"},
                                 {"if":{"row_index":"odd"},"backgroundColor":"#fafafa"},
                             ],
                         ),
